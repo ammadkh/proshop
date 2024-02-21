@@ -1,0 +1,30 @@
+import React, { useEffect, useState } from "react";
+import { Col, Row } from "react-bootstrap";
+import { Product } from "../components/Product";
+import axios from "axios";
+export const HomeScreen = () => {
+  const [products, setProducts] = useState([]);
+
+  const fetchProduct = async () => {
+    const { data } = await axios.get("/api/products");
+    console.log(products, "ddd");
+    setProducts(data);
+  };
+  useEffect(() => {
+    fetchProduct();
+  }, []);
+  return (
+    <>
+      <h1>Latest Products</h1>
+      <Row>
+        {products.map((product) => {
+          return (
+            <Col sm={12} md={6} lg={4} xl={3} key={product?._id}>
+              <Product product={product} />
+            </Col>
+          );
+        })}
+      </Row>
+    </>
+  );
+};
