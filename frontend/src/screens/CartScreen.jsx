@@ -10,7 +10,6 @@ export default function CartScreen() {
   const navigate = useNavigate();
   const dispatch = useDispatch();
   const { cart } = useSelector((state) => state);
-  console.log(cart, "cart");
   const { cartItems = [] } = cart || {};
   const addToCartHandler = (product, quantity) => {
     dispatch(addToCart({ ...product, quantity }));

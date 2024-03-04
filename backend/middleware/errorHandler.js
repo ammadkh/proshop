@@ -5,7 +5,7 @@ export const notFound = (req, res, next) => {
 };
 
 export const errorHandler = (error, req, res, next) => {
-  let statusCode = res.status === 200 ? 500 : res.status;
+  let statusCode = res.statusCode === 200 ? 500 : res.statusCode;
   let message = error.message;
   if (error.name === "CastError" && error.kind === "ObjectId") {
     message = "Resource not found";
