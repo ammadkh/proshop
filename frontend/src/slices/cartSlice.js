@@ -22,7 +22,6 @@ const cartSlice = createSlice({
       return updateCart(state);
     },
     removeFromCart: (state, action) => {
-      console.log(action, "ac");
       state.cartItems = state.cartItems.filter(
         (item) => item._id !== action.payload
       );
