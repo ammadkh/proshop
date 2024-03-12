@@ -19,5 +19,5 @@ orderRoutes
 
 orderRoutes.route("/mine").get(protect, getMyOrders);
 orderRoutes.route("/:id").get(protect, getOrderById);
-orderRoutes.route("/:id/pay").put(protect, admin, updateOrderToPaid);
+orderRoutes.route("/:id/pay").put(protect, updateOrderToPaid);
 orderRoutes.route("/:id/deliver").put(protect, admin, updateOrderToDelivered);

@@ -1,16 +1,25 @@
-import React from "react";
+import React, { useEffect } from "react";
 import { Link, useParams } from "react-router-dom";
-import { useGetOrderDetailsQuery } from "../slices/orderApiSlice";
+import {
+  useGetOrderDetailsQuery,
+  useGetPaypalClientIdQuery,
+  usePayOrderMutation,
+} from "../slices/orderApiSlice";
 import Loader from "../components/Loader";
 import Message from "../components/Message";
 import {
+  Button,
   Card,
   Col,
   Image,
   ListGroup,
   ListGroupItem,
   Row,
+  Toast,
 } from "react-bootstrap";
+import { PayPalButtons, usePayPalScriptReducer } from "@paypal/react-paypal-js";
+import { useSelector } from "react-redux";
+
 export default function OrderScreen() {
   const { id: orderId } = useParams();
   const {
@@ -19,6 +28,77 @@ export default function OrderScreen() {
     isLoading,
     error,
   } = useGetOrderDetailsQuery(orderId);
+
+  const [payOrder, { isLoading: payLoading }] = usePayOrderMutation(orderId);
+  const [{ isPending }, paypalDispatch] = usePayPalScriptReducer();
+  const { userInfo } = useSelector((state) => state.auth);
+  const {
+    data: paypal,
+    isLoading: loadingPaypal,
+    error: errorPaypal,
+  } = useGetPaypalClientIdQuery();
+
+  useEffect(() => {
+    if (!errorPaypal && !loadingPaypal && paypal.clientId) {
+      const loadPaypalScript = async () => {
+        paypalDispatch({
+          type: "resetOptions",
+          value: {
+            "client-id": paypal.clientId,
+            currency: "USD",
+          },
+        });
+        paypalDispatch({
+          type: "setLoadingStatus",
+          value: "pending",
+        });
+      };
+      if (order && !order.isPaid) {
+        if (!window.paypal) {
+          loadPaypalScript();
+        }
+      }
+    }
+  }, [order, paypal, paypalDispatch, loadingPaypal, errorPaypal]);
+
+  const onApproveTest = async () => {
+    try {
+      await payOrder({ orderId, details: { payer: { email_address: "sf" } } });
+      refetch();
+      Toast.success("Payment Suceesful");
+    } catch (error) {
+      Toast.error(error?.data?.message || error?.message);
+    }
+  };
+
+  const onCreateOrder = (data, actions) => {
+    return actions.order
+      .create({
+        purchase_units: [
+          {
+            amount: {
+              value: order.totalPrice,
+            },
+          },
+        ],
+      })
+      .then((orderId) => orderId);
+  };
+  const onApprove = (data, actions) => {
+    return actions.order.capture().then(async (detail) => {
+      try {
+        await payOrder({ orderId, detail });
+        refetch();
+        Toast.success("Payment Suceesful");
+      } catch (error) {
+        Toast.error(error?.data?.message || error?.message);
+      }
+    });
+  };
+  const onError = () => {
+    Toast.error(error?.message);
+  };
+
   console.log(order);
   return (
     <div>
@@ -116,6 +196,28 @@ export default function OrderScreen() {
                       <Col>${order.totalPrice}</Col>
                     </Row>
                   </ListGroup.Item>
+                  {!order.isPaid && (
+                    <ListGroup.Item>
+                      {payLoading && <Loader />}
+                      {isPending ? (
+                        <Loader />
+                      ) : (
+                        <>
+                          <Button
+                            onClick={onApproveTest}
+                            style={{ marginBottom: 10 }}
+                          >
+                            Test pay button
+                          </Button>
+                          <PayPalButtons
+                            createOrder={onCreateOrder}
+                            onApprove={onApprove}
+                            onError={onError}
+                          ></PayPalButtons>
+                        </>
+                      )}
+                    </ListGroup.Item>
+                  )}
                 </ListGroup>
               </Card>
             </Col>

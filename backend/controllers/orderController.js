@@ -35,7 +35,7 @@ export const addOrderItems = asyncHandler(async (req, res) => {
 });
 
 export const getMyOrders = asyncHandler(async (req, res) => {
-  const orders = await Order.find({ user: req.user._id });
+  const orders = await Order.find({ user: req.user.id });
   res.status(200).json(orders);
 });
 
@@ -53,7 +53,7 @@ export const getOrderById = asyncHandler(async (req, res) => {
 });
 
 export const updateOrderToPaid = asyncHandler(async (req, res) => {
-  const order = Order.findById(req.params.id);
+  const order = await Order.findById(req.params.id);
   if (order) {
     order.isPaid = true;
     order.paidAt = Date.now();
@@ -61,7 +61,7 @@ export const updateOrderToPaid = asyncHandler(async (req, res) => {
       id: req.body.id,
       status: req.body.status,
       update_time: req.body.update_time,
-      email_address: req.body.payer.email_address,
+      email_address: req.body.payer?.email_address,
     };
     const updatedOrder = await order.save();
     res.status(200).json(updatedOrder);
