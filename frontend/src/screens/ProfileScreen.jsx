@@ -142,7 +142,7 @@ export default function ProfileScreen() {
                           )}
                         </td>
                         <td>
-                          <LinkContainer to={`orders/${item._id}`}>
+                          <LinkContainer to={`/orders/${item._id}`}>
                             <Button className="btn-sm" variant="primary">
                               Details
                             </Button>
