@@ -66,14 +66,25 @@ export const updateOrderToPaid = asyncHandler(async (req, res) => {
     const updatedOrder = await order.save();
     res.status(200).json(updatedOrder);
   } else {
-    res.status(404).json("order not found");
+    res.status(404);
+    throw new Error("no order found");
   }
 });
 
 export const updateOrderToDelivered = asyncHandler(async (req, res) => {
-  res.json("update order to delivered");
+  const order = await Order.findById(req.params.id);
+  if (order) {
+    order.isDelivered = true;
+    order.deliveredAt = Date.now();
+    const response = await order.save();
+    res.status(200).json(response);
+  } else {
+    res.status(400);
+    throw new Error("no order found");
+  }
 });
 
 export const getOrders = asyncHandler(async (req, res) => {
-  res.json("get orders");
+  const orders = await Order.find({}).populate("user", "id name");
+  res.status(200).json(orders);
 });
