@@ -31,7 +31,7 @@ export default function OrderListScreen() {
               </tr>
             </thead>
             <tbody>
-              {data.map((order) => {
+              {data?.map((order) => {
                 return (
                   <tr key={order._id}>
                     <td>{order._id}</td>
