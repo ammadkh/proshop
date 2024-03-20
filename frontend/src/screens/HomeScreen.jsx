@@ -5,11 +5,19 @@ import axios from "axios";
 import { useGetProductsQuery } from "../slices/productsApiSlice";
 import Loader from "../components/Loader";
 import Message from "../components/Message";
+import { useParams } from "react-router-dom";
+import Paginate from "../components/Paginate";
+import TopProducts from "../components/TopProducts";
 export const HomeScreen = () => {
-  const { data: products, error, isLoading } = useGetProductsQuery();
+  const { pageNumber, keyword } = useParams();
+  const { data, error, isLoading } = useGetProductsQuery({
+    pageNumber,
+    keyword,
+  });
 
   return (
     <>
+      {!keyword && <TopProducts />}
       {isLoading ? (
         <Loader />
       ) : error ? (
@@ -20,7 +28,7 @@ export const HomeScreen = () => {
         <>
           <h1>Latest Products</h1>
           <Row>
-            {products.map((product) => {
+            {data?.products.map((product) => {
               return (
                 <Col sm={12} md={6} lg={4} xl={3} key={product?._id}>
                   <Product product={product} />
@@ -28,6 +36,11 @@ export const HomeScreen = () => {
               );
             })}
           </Row>
+          <Paginate
+            pages={data.pages}
+            page={data.page}
+            keyword={keyword}
+          ></Paginate>
         </>
       )}
     </>

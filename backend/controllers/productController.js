@@ -2,7 +2,20 @@ import { asyncHandler } from "../middleware/asyncHandler.js";
 import { Product } from "../models/productModel.js";
 
 export const getProducts = asyncHandler(async (req, res) => {
-  const products = await Product.find({});
+  const pageSize = 8;
+  const page = +req.query.pageNumber || 1;
+  const keyword = req.query.search
+    ? { name: { $regex: req.query.search, $options: "i" } }
+    : {};
+  const count = await Product.countDocuments({ ...keyword });
+  const products = await Product.find({ ...keyword })
+    .limit(pageSize)
+    .skip(pageSize * (page - 1));
+  res.json({ products, page, pages: Math.ceil(count / pageSize) });
+});
+
+export const getTopProducts = asyncHandler(async (req, res) => {
+  const products = await Product.find({}).sort({ rating: -1 }).limit(3);
   res.json(products);
 });
 
@@ -59,6 +72,37 @@ export const deleteProduct = asyncHandler(async (req, res) => {
   if (product) {
     await Product.deleteOne({ _id: id });
     res.status(202).json("product deleted");
+  } else {
+    res.status(404);
+    throw new Error("Product not found");
+  }
+});
+
+export const createProductReview = asyncHandler(async (req, res) => {
+  const { id } = req.params;
+  const { comment, rating } = req.body;
+  const product = await Product.findById(id);
+  if (product) {
+    const alreadyReviewExists = product.reviews.find(
+      (review) => review.user.toString() === req.user._id.toString()
+    );
+    if (alreadyReviewExists) {
+      res.status(404);
+      throw new Error("Comment already exists");
+    }
+    const review = {
+      name: req.user.name,
+      user: req.user._id,
+      rating: +rating,
+      comment,
+    };
+    product.reviews.push(review);
+    product.numReviews = product.reviews.length;
+    product.rating =
+      product.reviews.reduce((sum, current) => sum + current.rating, 0) /
+      product.reviews.length;
+    await product.save();
+    res.status(202).json("review added");
   } else {
     res.status(404);
     throw new Error("Product not found");

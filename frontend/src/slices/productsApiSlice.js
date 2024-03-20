@@ -4,8 +4,9 @@ import { apiSlice } from "./apiSlice";
 export const productsApiSlice = apiSlice.injectEndpoints({
   endpoints: (builder) => ({
     getProducts: builder.query({
-      query: () => ({
+      query: ({ pageNumber, keyword }) => ({
         url: PRODUCTS_URL,
+        params: { pageNumber, search: keyword },
       }),
       keepUnusedDataFor: 5,
     }),
@@ -41,6 +42,19 @@ export const productsApiSlice = apiSlice.injectEndpoints({
         method: "DELETE",
       }),
     }),
+    createProductReview: builder.mutation({
+      query: (data) => ({
+        url: `${PRODUCTS_URL}/${data.id}/reviews`,
+        method: "POST",
+        body: data,
+      }),
+    }),
+
+    getTopProducts: builder.query({
+      query: () => ({
+        url: `${PRODUCTS_URL}/top`,
+      }),
+    }),
   }),
 });
 
@@ -51,4 +65,6 @@ export const {
   useUpdateProductMutation,
   useUploadProductImageMutation,
   useDeleteProductMutation,
+  useCreateProductReviewMutation,
+  useGetTopProductsQuery,
 } = productsApiSlice;

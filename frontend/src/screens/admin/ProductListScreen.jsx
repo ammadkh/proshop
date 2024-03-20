@@ -10,9 +10,14 @@ import Loader from "../../components/Loader";
 import Message from "../../components/Message";
 import { LinkContainer } from "react-router-bootstrap";
 import { toast } from "react-toastify";
+import Paginate from "../../components/Paginate";
+import { useParams } from "react-router-dom";
 
 export default function ProductListScreen() {
-  const { data: products, refetch, isLoading, error } = useGetProductsQuery();
+  const { pageNumber } = useParams();
+  const { data, refetch, isLoading, error } = useGetProductsQuery({
+    pageNumber,
+  });
   const [createProduct, { isLoading: createLoading, error: createError }] =
     useCreateProductMutation();
 
@@ -68,7 +73,7 @@ export default function ProductListScreen() {
             </tr>
           </thead>
           <tbody>
-            {products.map((product) => {
+            {data?.products.map((product) => {
               return (
                 <tr key={product._id}>
                   <td>{product._id}</td>
@@ -96,6 +101,7 @@ export default function ProductListScreen() {
           </tbody>
         </Table>
       )}
+      <Paginate pages={data?.pages} page={data?.page} isAdmin={true}></Paginate>
     </div>
   );
 }
